@@ -45,7 +45,11 @@ class GolfSwingDataPipeline:
         logger.info(f"Saved predictions for {video_name} to {output_file}")
 
     def run(self):
-        video_files = list(self.input_dir.glob('*.mp4'))
+        video_files = list(self.input_dir.glob('*.MOV'))
+
+        video_files = [vid for vid in video_files if "IMG" in str(vid)]
+        print(video_files)
+        # return 
         
         with ThreadPoolExecutor() as executor:
             executor.map(self.process_video, video_files)
@@ -56,7 +60,7 @@ if __name__ == "__main__":
 
     # Define paths relative to the script directory
     INPUT_DIR = SCRIPT_DIR.parent / "input_videos"
-    OUTPUT_DIR = SCRIPT_DIR / "predictions"
+    OUTPUT_DIR = SCRIPT_DIR.parent / "predictions"
     MODEL_ID = "golf-49wbh/1"
     API_KEY = os.getenv("ROBOFLOW_API_KEY")
 
