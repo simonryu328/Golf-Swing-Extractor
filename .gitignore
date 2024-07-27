@@ -3,3 +3,4 @@ input_videos/
 output_videos/
 models/
 __pycache__/
+sequences/
