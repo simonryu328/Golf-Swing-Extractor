@@ -5,6 +5,7 @@ from inference import InferencePipeline
 from inference.core.interfaces.camera.entities import VideoFrame
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import time
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,6 +19,7 @@ class GolfSwingDataPipeline:
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
     def process_video(self, video_path):
+        start_time = time.time()
         video_name = video_path.stem
         output_file = self.output_dir / f"{video_name}_predictions.jsonl"
         
@@ -42,7 +44,9 @@ class GolfSwingDataPipeline:
                 json.dump(pred, f)
                 f.write('\n')
 
-        logger.info(f"Saved predictions for {video_name} to {output_file}")
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        logger.info(f"Saved predictions for {video_name} to {output_file} in {elapsed_time:.2f} seconds")
 
     def run(self):
         video_files = list(self.input_dir.glob('*.MOV'))
@@ -59,10 +63,23 @@ if __name__ == "__main__":
     SCRIPT_DIR = Path(__file__).resolve().parent
 
     # Define paths relative to the script directory
-    INPUT_DIR = SCRIPT_DIR.parent / "input_videos"
-    OUTPUT_DIR = SCRIPT_DIR.parent / "predictions"
+    DATA_TYPE = "TEST"
+
+    if DATA_TYPE == "TRAIN":
+        INPUT_DIR = SCRIPT_DIR.parent / "input_videos" / "train"
+        OUTPUT_DIR = SCRIPT_DIR.parent / "predictions" / "train"
+    elif DATA_TYPE == "TEST":
+        INPUT_DIR = SCRIPT_DIR.parent / "input_videos" / "test"
+        OUTPUT_DIR = SCRIPT_DIR.parent / "predictions" / "test"
+    else:
+        raise ValueError(f"Invalid data type: {DATA_TYPE}")
+    
     MODEL_ID = "golf-49wbh/1"
     API_KEY = os.getenv("ROBOFLOW_API_KEY")
 
+    start_time = time.time()
     pipeline = GolfSwingDataPipeline(INPUT_DIR, OUTPUT_DIR, MODEL_ID, API_KEY)
     pipeline.run()
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    logger.info(f"Total processing time: {elapsed_time:.2f} seconds")
