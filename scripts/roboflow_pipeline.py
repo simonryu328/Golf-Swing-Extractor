@@ -74,6 +74,9 @@ if __name__ == "__main__":
     else:
         raise ValueError(f"Invalid data type: {DATA_TYPE}")
     
+    INPUT_DIR = SCRIPT_DIR.parent / "input_videos" / "new"
+    OUTPUT_DIR = SCRIPT_DIR.parent / "predictions"
+
     MODEL_ID = "golf-49wbh/1"
     API_KEY = os.getenv("ROBOFLOW_API_KEY")
 
