@@ -66,8 +66,11 @@ class GolfSwingAnalyzer:
         # Create sequences
         sequences = []
         labels = []
+        frames = []
         for i in range(0, len(processed_frames), overlap):
             seq_frames = list(processed_frames.keys())[i:i+sequence_length]
+            # Add the first frame of the sequence to the frames list
+            frames.append(seq_frames[0])
             seq = [processed_frames[j] for j in seq_frames if j in processed_frames]
             
             # Check if sequence is complete
@@ -79,7 +82,7 @@ class GolfSwingAnalyzer:
                     swing_frames = [frame for frame in seq_frames if any(start <= frame < end for start, end in swing_intervals)]
                     labels.append(1 if len(swing_frames) / len(seq_frames) > swing_threshold else 0)
         
-        return np.array(sequences), np.array(labels)
+        return np.array(sequences), np.array(labels), frames
 
     def plot_sample_sequences(self, sequences, labels, num_samples=3):
         # Get indices of positive and negative samples
