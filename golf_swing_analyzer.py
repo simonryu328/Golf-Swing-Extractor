@@ -69,13 +69,14 @@ class GolfSwingAnalyzer:
         frames = []
         for i in range(0, len(processed_frames), overlap):
             seq_frames = list(processed_frames.keys())[i:i+sequence_length]
-            # Add the first frame of the sequence to the frames list
-            frames.append(seq_frames[0])
             seq = [processed_frames[j] for j in seq_frames if j in processed_frames]
             
             # Check if sequence is complete
             if len(seq) == sequence_length:
                 sequences.append(seq)
+
+                # Add the first frame of the sequence to the frames list
+                frames.append(seq_frames[0])
                 
                 # Label the sequence if swing intervals are provided
                 if swing_intervals:
@@ -340,7 +341,48 @@ class GolfSwingAnalyzer:
             HBox([start_button, end_button, show_button, check_button, save_button])
         ]))
 
-# Usage example:
-# analyzer = GolfSwingAnalyzer("your_video_file.mp4")
-# analyzer.combined_plot()
-# analyzer.find_swing_intervals()
+
+def plot_sample_sequences(sequences, labels, num_samples=6):
+    # Get indices of positive and negative samples
+    positive_indices = np.where(labels == 1)[0]
+    negative_indices = np.where(labels == 0)[0]
+    
+    # Randomly sample from positive and negative sequences
+    sample_positive = random.sample(list(positive_indices), min(num_samples, len(positive_indices)))
+    sample_negative = random.sample(list(negative_indices), min(num_samples, len(negative_indices)))
+    
+    # Create subplots: num_samples rows x 2 columns (positive and negative)
+    fig = make_subplots(rows=num_samples, cols=2, 
+                        subplot_titles=(['Positive Samples']*num_samples + ['Negative Samples']*num_samples),
+                        horizontal_spacing=0.1,
+                        column_widths=[0.5, 0.5])
+    
+    def plot_sequence(seq, row, col):
+        frames = np.arange(len(seq))
+        
+        # Plot x coordinates for club
+        fig.add_trace(go.Scatter(x=frames, y=seq[:, 0], mode='lines+markers', name='Club X', 
+                                 line=dict(color='blue'), showlegend=row==1 and col==1), 
+                      row=row, col=col)
+        
+        # Plot x coordinates for club head
+        fig.add_trace(go.Scatter(x=frames, y=seq[:, 2], mode='lines+markers', name='Club Head X', 
+                                 line=dict(color='red'), showlegend=row==1 and col==1), 
+                      row=row, col=col)
+    
+    # Plot positive samples
+    for i, idx in enumerate(sample_positive):
+        plot_sequence(sequences[idx], i+1, 1)
+    
+    # Plot negative samples
+    for i, idx in enumerate(sample_negative):
+        plot_sequence(sequences[idx], i+1, 2)
+    
+    # Update layout
+    fig.update_layout(height=300*num_samples, width=1200, 
+                      title_text="Sample Sequences: Positive vs Negative (X Coordinates)")
+    fig.update_xaxes(title_text="Frame Number")
+    fig.update_yaxes(title_text="Normalized X Coordinate", range=[0, 1])
+    
+    # Show the plot
+    fig.show()
